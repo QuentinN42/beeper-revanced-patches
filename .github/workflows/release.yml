@@ -53,31 +53,39 @@ jobs:
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
           fingerprint: ${{ vars.GPG_FINGERPRINT }}
 
-      # Gradle invokes gpg headlessly for signing the patches publication;
-      # pre-seed the passphrase into gpg-agent's cache so no pinentry/TTY is needed.
-      - name: Cache GPG passphrase
+      # Gradle invokes gpg headlessly for signing the patches publication.
+      # The import action already presets the passphrase for the master keygrip;
+      # preset it for ALL keygrips (incl. the signing subkey) and instrument gpg
+      # so the exact invocation appears in the log if something still fails.
+      - name: Cache GPG passphrase for all keygrips
         env:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
-          touch ~/.gnupg/gpg-agent.conf ~/.gnupg/gpg.conf
-          python3 - <<'EOF'
-          conf = open('/home/runner/.gnupg/gpg-agent.conf').read()
-          for opt in ('allow-preset-passphrase','default-cache-ttl 3600'):
-              if opt not in conf:
-                  open('/home/runner/.gnupg/gpg-agent.conf','a').write(opt+'\n')
-          gpgconf_conf = open('/home/runner/.gnupg/gpg.conf').read()
-          if 'pinentry-mode loopback' not in gpgconf_conf:
-              open('/home/runner/.gnupg/gpg.conf','a').write('pinentry-mode loopback\n')
-          EOF
-          gpgconf --kill gpg-agent
-          gpgconf --launch gpg-agent
-          PRESET=$(find /usr/lib/x86_64-linux-gnu/gnupg /usr/lib/gnupg -name gpg-preset-passphrase 2>/dev/null | head -1)
-          echo "preset tool: $PRESET"
+          HEXPASS=$(printf '%s' "$GPG_PASSPHRASE" | xxd -p -u | tr -d '\n')
           for grip in $(gpg --list-secret-keys --with-colons --with-keygrip | awk -F: '/^grp/{print $10}'); do
-            preset_result=$(echo "$GPG_PASSPHRASE" | "$PRESET" "$grip" 2>&1) && echo "preset ok: $grip" || echo "preset failed: $grip: $preset_result"
+            if gpg-connect-agent "PRESET_PASSPHRASE ${grip} -1 ${HEXPASS}" /bye 2>&1 | tee /dev/stderr | grep -q '^OK'; then
+              echo "preset ok: $grip"
+            else
+              echo "::warning::preset failed for grip $grip"
+            fi
           done
+
+      - name: Instrument gpg with logging wrapper
+        run: |
+          mkdir -p "$HOME/debug-bin"
+          cat > "$HOME/debug-bin/gpg" <<'EOS'
+          #!/usr/bin/env bash
+          printf 'GPG-CALL:%s\n' "$*" >> /tmp/gpg-wrapper.log 2>/dev/null || true
+          exec /usr/bin/gpg "$@"
+          EOS
+          chmod +x "$HOME/debug-bin/gpg"
+          echo "$HOME/debug-bin" >> "$GITHUB_PATH"
 
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm exec semantic-release
+
+      - name: Show gpg invocations
+        if: always()
+        run: cat /tmp/gpg-wrapper.log 2>/dev/null || echo "no gpg invocation logged"
