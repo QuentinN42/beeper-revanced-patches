@@ -53,6 +53,30 @@ jobs:
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
           fingerprint: ${{ vars.GPG_FINGERPRINT }}
 
+      # Gradle invokes gpg headlessly for signing the patches publication;
+      # pre-seed the passphrase into gpg-agent's cache so no pinentry/TTY is needed.
+      - name: Cache GPG passphrase
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          touch ~/.gnupg/gpg-agent.conf ~/.gnupg/gpg.conf
+          python3 - <<'EOF'
+          conf = open('/home/runner/.gnupg/gpg-agent.conf').read()
+          for opt in ('allow-preset-passphrase','default-cache-ttl 3600'):
+              if opt not in conf:
+                  open('/home/runner/.gnupg/gpg-agent.conf','a').write(opt+'\n')
+          gpgconf_conf = open('/home/runner/.gnupg/gpg.conf').read()
+          if 'pinentry-mode loopback' not in gpgconf_conf:
+              open('/home/runner/.gnupg/gpg.conf','a').write('pinentry-mode loopback\n')
+          EOF
+          gpgconf --kill gpg-agent
+          gpgconf --launch gpg-agent
+          PRESET=$(find /usr/lib/x86_64-linux-gnu/gnupg /usr/lib/gnupg -name gpg-preset-passphrase 2>/dev/null | head -1)
+          echo "preset tool: $PRESET"
+          for grip in $(gpg --list-secret-keys --with-colons --with-keygrip | awk -F: '/^grp/{print $10}'); do
+            preset_result=$(echo "$GPG_PASSPHRASE" | "$PRESET" "$grip" 2>&1) && echo "preset ok: $grip" || echo "preset failed: $grip: $preset_result"
+          done
+
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
