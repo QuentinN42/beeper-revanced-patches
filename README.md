@@ -14,13 +14,13 @@ official [ReVanced Patches](https://github.com/revanced/revanced-patches) bundle
 
 | Patch | Description |
 |---|---|
-| **Group alert once** 🚧 | In group chats, only alerts (sound / vibration) on the first notification until it is dismissed; subsequent messages update the notification silently (`FLAG_ONLY_ALERT_ONCE`). |
+| **Beeper alert once** | Only alert (sound and vibration) once per notification. Further updates to the same notification are silent until it is dismissed. |
 
 ## 📱 Usage
 
 1. Install [ReVanced Manager](https://github.com/ReVanced/revanced-manager/releases) (latest version).
 2. *Settings → Patch sources* (or *Alternative sources*) and add `QuentinN42/beeper-revanced-patches`.
-3. Select the Beeper APK you want to patch and enable the `Group alert once` patch.
+3. Select the Beeper APK you want to patch and enable the `Beeper alert once` patch.
 4. Patch.
 
 ## 🏗️ Development
