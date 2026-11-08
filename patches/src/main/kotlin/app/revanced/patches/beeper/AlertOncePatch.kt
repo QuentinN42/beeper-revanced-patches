@@ -8,10 +8,20 @@ import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.ClassDef
 import com.android.tools.smali.dexlib2.iface.Method
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
+import com.android.tools.smali.dexlib2.iface.instruction.Instruction
+import com.android.tools.smali.dexlib2.iface.instruction.RegisterRangeInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 
 private const val EXTENSION_CLASS = "Lapp/revanced/extension/beeper/NotificationHelper;"
+
+/**
+ * The java.util.logging name must start with "app.revanced" for log records to
+ * be propagated to the patch hosts' root logger and shown in their log output.
+ */
+private val patchLogger = java.util.logging.Logger.getLogger(
+    "app.revanced.patches.beeper.AlertOncePatch",
+)
 
 /**
  * [Method] with its list of patch targets: each entry is the instruction index
@@ -21,6 +31,51 @@ private data class MethodTargets(
     val method: Method,
     val targets: List<Pair<Int, Int>>,
 )
+
+/**
+ * Extract the register holding the Notification argument of a notify() call.
+ *
+ * The Notification is the last argument of the call. For instance calls the
+ * argument registers of the dex 35c format start one slot after the receiver
+ * (registerC), for static calls they start directly at registerC:
+ *
+ * - `invoke-virtual {vC, vD, vE}, NotificationManager->notify(id, notification)`
+ *   → receiver C, id D, notification E.
+ * - `invoke-static {vC, vD}, NotificationManagerCompat->notify(id, notification)`
+ *   → id C, notification D.
+ */
+private fun getNotificationRegister(
+    instruction: Instruction,
+    methodReference: MethodReference,
+): Int? {
+    val argumentIndex = methodReference.parameterTypes.size - 1
+    val receiverOffset = when (instruction.opcode) {
+        Opcode.INVOKE_VIRTUAL, Opcode.INVOKE_VIRTUAL_RANGE -> 1
+        Opcode.INVOKE_STATIC, Opcode.INVOKE_STATIC_RANGE -> 0
+        else -> return null
+    }
+
+    return when (instruction) {
+        is FiveRegisterInstruction -> when (receiverOffset + argumentIndex) {
+            0 -> instruction.registerC
+            1 -> instruction.registerD
+            2 -> instruction.registerE
+            3 -> instruction.registerF
+            4 -> instruction.registerG
+            // notify() takes at most 3 arguments plus a receiver: this branch
+            // is unreachable, but keeps the when exhaustive.
+            else -> null
+        }
+
+        is RegisterRangeInstruction -> {
+            val register = instruction.startRegister + receiverOffset + argumentIndex
+            // The requested register must be part of the call.
+            if (register < instruction.startRegister + instruction.registerCount) register else null
+        }
+
+        else -> null
+    }
+}
 
 /**
  * Find every notify() call in the class and for each of them the instruction
@@ -33,10 +88,14 @@ private fun findTargets(classDef: ClassDef): List<MethodTargets> =
         val targets = mutableListOf<Pair<Int, Int>>()
 
         method.implementation?.instructions?.forEachIndexed { index, instruction ->
-            if (instruction.opcode != Opcode.INVOKE_VIRTUAL) {
-                // invoke-virtual/range is not expected: notify() takes at most
-                // 3 arguments, which is always emitted as a 5-register call.
-                return@forEachIndexed
+            when (instruction.opcode) {
+                Opcode.INVOKE_VIRTUAL,
+                Opcode.INVOKE_STATIC,
+                Opcode.INVOKE_VIRTUAL_RANGE,
+                Opcode.INVOKE_STATIC_RANGE,
+                    -> Unit // Notification posting call format, continue below.
+
+                else -> return@forEachIndexed
             }
 
             val methodReference = (instruction as? ReferenceInstruction)
@@ -44,7 +103,8 @@ private fun findTargets(classDef: ClassDef): List<MethodTargets> =
                 ?: return@forEachIndexed
 
             // Match every notification posting call without caring about the exact
-            // receiver class: NotificationManager, NotificationManagerCompat, wrappers...
+            // receiver class: NotificationManager (instance), NotificationManagerCompat
+            // (static), wrappers...
             // notify(<...>, notification) is what identifies posting with a Notification.
             if (methodReference.name != "notify" ||
                 methodReference.parameterTypes.size < 2 ||
@@ -53,19 +113,8 @@ private fun findTargets(classDef: ClassDef): List<MethodTargets> =
                 return@forEachIndexed
             }
 
-            // The Notification is the last argument of the call.
-            // Argument registers of the dex 35c format are named C, D, E, F, G
-            // (the two first argument register indices are packed into separate
-            // nibbles of the instruction, hence the letters offset).
-            val invoke = instruction as FiveRegisterInstruction
-            val argumentIndex = methodReference.parameterTypes.size - 1
-            val notificationRegister = when (argumentIndex) {
-                0 -> invoke.registerC
-                1 -> invoke.registerD
-                2 -> invoke.registerE
-                3 -> invoke.registerF
-                else -> invoke.registerG
-            }
+            val notificationRegister = getNotificationRegister(instruction, methodReference)
+                ?: return@forEachIndexed
 
             targets.add(index to notificationRegister)
         }
@@ -112,6 +161,7 @@ val alertOncePatch = bytecodePatch(
         }
 
         // Then proxy and patch each class.
+        var injected = 0
         classesToPatch.forEach { (classDef, methodTargets) ->
             val mutableClass = proxy(classDef).mutableClass
 
@@ -122,14 +172,44 @@ val alertOncePatch = bytecodePatch(
 
                 pairs.forEach { (index, register) ->
                     // NotificationHelper mutates the notification object in place,
-                    // so no result register is needed after the call.
+                    // so no result register is needed after the call. The 5-register
+                    // call format (35c) cannot encode registers above 15, which the
+                    // range format covers.
+                    val invoke =
+                        if (register < 16) "invoke-static { v$register }, "
+                        else "invoke-static/range { v$register .. v$register }, "
+
                     mutableMethod.addInstructions(
                         index,
-                        "invoke-static { v$register }, $EXTENSION_CLASS->" +
+                        "$invoke$EXTENSION_CLASS->" +
                                 "modifyNotification(Landroid/app/Notification;)V",
                     )
                 }
+
+                injected += pairs.size
+                patchLogger.info(
+                    "Patched ${pairs.size} notify() call site(s) in " +
+                            "${classDef.type}->${method.name}",
+                )
             }
+        }
+
+        if (injected > 0) {
+            patchLogger.info(
+                "Flagged $injected notify() call site(s) with FLAG_ONLY_ALERT_ONCE",
+            )
+        } else {
+            patchLogger.warning(
+                "No notify() call with a Notification parameter was found; " +
+                        "the patch did not modify the app",
+            )
+
+            throw PatchException(
+                "No notify() calls the patch could hook were found in the app; " +
+                        "repeated alerts will not be silenced. " +
+                        "If this is a Beeper update changing its notification code, " +
+                        "report an issue so the patch can be updated.",
+            )
         }
     }
 }
