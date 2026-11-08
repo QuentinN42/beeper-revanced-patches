@@ -1,3 +1,10 @@
+# 1.0.0 (2026-11-08)
+
+
+### Features
+
+* set up Beeper patches repository ([1642741](https://github.com/QuentinN42/beeper-revanced-patches/commit/1642741112584a00d46e7a6801f85881075348f0))
+
 ## [1.0.4](https://github.com/ReVanced/revanced-patches-template/compare/v1.0.3...v1.0.4) (2024-11-05)
 
 ## [1.0.4-dev.2](https://github.com/ReVanced/revanced-patches-template/compare/v1.0.4-dev.1...v1.0.4-dev.2) (2024-11-05)
