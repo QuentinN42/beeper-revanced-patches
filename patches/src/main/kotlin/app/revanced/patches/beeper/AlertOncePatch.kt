@@ -1,6 +1,7 @@
 package app.revanced.patches.beeper
 
 import app.revanced.patcher.extensions.InstructionExtensions.addInstructions
+import app.revanced.patcher.patch.PatchException
 import app.revanced.patcher.patch.bytecodePatch
 import app.revanced.patcher.util.proxy.mutableTypes.MutableMethod
 import com.android.tools.smali.dexlib2.Opcode
@@ -84,7 +85,19 @@ val alertOncePatch = bytecodePatch(
 ) {
     compatibleWith("com.beeper.android")
 
-    extendWith("extensions/extension.rve")
+    // Use the non-inline extendWith overload with an explicit supplier.
+    // The inline String overload resolves the resource through the classloader
+    // of the patcher itself, whose classes are embedded in the patching host
+    // (ReVanced Manager) and cannot see the patches file's resources. This
+    // bundle's own classes are loaded from the patches dex file, so their
+    // classloader resolves extensions/extension.rve from the patches file.
+    extendWith {
+        object {}.javaClass.classLoader
+            ?.getResourceAsStream("extensions/extension.rve")
+            ?: throw PatchException(
+                "Extension \"extensions/extension.rve\" not found",
+            )
+    }
 
     execute {
         // Collect every class to patch before proxying anything,
