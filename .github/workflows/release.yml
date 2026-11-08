@@ -35,7 +35,13 @@ jobs:
       - name: Build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./gradlew build clean
+          GITHUB_ACTOR: ${{ github.actor }}
+          # The patches gradle plugin resolves app.revanced artifacts from
+          # GitHub Packages; its "githubPackages" repository needs credentials
+          # passed as Gradle properties.
+          GITHUB_PACKAGES_USERNAME: ${{ github.actor }}
+          GITHUB_PACKAGES_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew build clean -PgithubPackagesUsername="$GITHUB_PACKAGES_USERNAME" -PgithubPackagesPassword="$GITHUB_PACKAGES_PASSWORD"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
