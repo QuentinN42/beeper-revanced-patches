@@ -1,3 +1,11 @@
+## [1.1.1](https://github.com/QuentinN42/beeper-revanced-patches/compare/v1.1.0...v1.1.1) (2026-11-08)
+
+
+### Bug Fixes
+
+* **ci:** pass github packages credentials to gradle build ([3dfd566](https://github.com/QuentinN42/beeper-revanced-patches/commit/3dfd5664234ebc029f80ab488b0d5a6739ecfaf9))
+* **ci:** provide github packages credentials to all gradle invocations ([fad762c](https://github.com/QuentinN42/beeper-revanced-patches/commit/fad762c42368bc3af868b8e6aa973a9ae3f99a90))
+
 # [1.1.0](https://github.com/QuentinN42/beeper-revanced-patches/compare/v1.0.1...v1.1.0) (2026-11-08)
 
 
