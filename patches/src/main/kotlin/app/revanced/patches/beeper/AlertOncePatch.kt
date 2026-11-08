@@ -53,15 +53,17 @@ private fun findTargets(classDef: ClassDef): List<MethodTargets> =
             }
 
             // The Notification is the last argument of the call.
-            // Registers for the first five arguments: A, B, C, D, E.
+            // Argument registers of the dex 35c format are named C, D, E, F, G
+            // (the two first argument register indices are packed into separate
+            // nibbles of the instruction, hence the letters offset).
             val invoke = instruction as FiveRegisterInstruction
             val argumentIndex = methodReference.parameterTypes.size - 1
             val notificationRegister = when (argumentIndex) {
-                0 -> invoke.registerA
-                1 -> invoke.registerB
-                2 -> invoke.registerC
-                3 -> invoke.registerD
-                else -> invoke.registerE
+                0 -> invoke.registerC
+                1 -> invoke.registerD
+                2 -> invoke.registerE
+                3 -> invoke.registerF
+                else -> invoke.registerG
             }
 
             targets.add(index to notificationRegister)
