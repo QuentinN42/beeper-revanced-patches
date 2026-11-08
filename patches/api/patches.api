@@ -1,3 +1,4 @@
 public final class app/revanced/patches/beeper/AlertOncePatchKt {
 	public static final fun getAlertOncePatch ()Lapp/revanced/patcher/patch/BytecodePatch;
 }
+
