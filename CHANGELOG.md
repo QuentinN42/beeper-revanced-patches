@@ -1,3 +1,11 @@
+## [1.0.1](https://github.com/QuentinN42/beeper-revanced-patches/compare/v1.0.0...v1.0.1) (2026-11-08)
+
+
+### Bug Fixes
+
+* cache gpg-agent passphrase for headless signing in release workflow ([5f7455f](https://github.com/QuentinN42/beeper-revanced-patches/commit/5f7455f8e77ebcfecc18a1b602b634e7eba79b09))
+* preset gpg passphrase for all keygrips before gradle signing ([eff0826](https://github.com/QuentinN42/beeper-revanced-patches/commit/eff0826bf256952a1ae6f592b00986c6bcf0d380))
+
 # 1.0.0 (2026-11-08)
 
 
