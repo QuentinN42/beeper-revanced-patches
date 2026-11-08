@@ -1,3 +1,17 @@
+# [1.1.0](https://github.com/QuentinN42/beeper-revanced-patches/compare/v1.0.1...v1.1.0) (2026-11-08)
+
+
+### Bug Fixes
+
+* **beeper:** adjust alert once patch for patcher 21 APIs ([f1be0df](https://github.com/QuentinN42/beeper-revanced-patches/commit/f1be0df111f23ecc166971ae013d6ec16f7b96b4))
+* **beeper:** use 35c argument register getters ([b2a7c08](https://github.com/QuentinN42/beeper-revanced-patches/commit/b2a7c08e602fe29098146b55a80abb3c2d69c83f))
+* match api dump trailing newline ([a160c1e](https://github.com/QuentinN42/beeper-revanced-patches/commit/a160c1e3dc553daea6ccc8f16618621f6ae512c4))
+
+
+### Features
+
+* **beeper:** add alert once patch ([13bf03c](https://github.com/QuentinN42/beeper-revanced-patches/commit/13bf03c7e70e0555aa6d52875aab90b6ce50e8ea))
+
 ## [1.0.1](https://github.com/QuentinN42/beeper-revanced-patches/compare/v1.0.0...v1.0.1) (2026-11-08)
 
 
