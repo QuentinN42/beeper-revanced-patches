@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/QuentinN42/beeper-revanced-patches/compare/v1.1.1...v1.2.0) (2026-11-08)
+
+
+### Features
+
+* **beeper:** add alert once notification patch ([7d1d84c](https://github.com/QuentinN42/beeper-revanced-patches/commit/7d1d84c1e24ae0e96992b499bcbb3f75dcfd2829))
+
 ## [1.1.1](https://github.com/QuentinN42/beeper-revanced-patches/compare/v1.1.0...v1.1.1) (2026-11-08)
 
 
