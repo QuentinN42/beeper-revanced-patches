@@ -14,7 +14,7 @@ official [ReVanced Patches](https://github.com/revanced/revanced-patches) bundle
 
 | Patch | Description |
 |---|---|
-| **Beeper alert once** | Only alert (sound and vibration) once per notification. Further updates to the same notification are silent until it is dismissed. |
+| **Beeper alert once** | Only alert (sound and vibration) once per conversation: repeated messages update the existing notification silently (`FLAG_ONLY_ALERT_ONCE` + stable per-conversation notification id) until it is dismissed. |
 
 ## 📱 Usage
 
