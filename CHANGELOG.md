@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/QuentinN42/beeper-revanced-patches/compare/v1.2.0...v1.2.1) (2026-11-10)
+
+
+### Bug Fixes
+
+* correct notify() call site matching ([55a493f](https://github.com/QuentinN42/beeper-revanced-patches/commit/55a493f8c18e1bef94cd450582d12af985a7b941))
+
 # [1.2.0](https://github.com/QuentinN42/beeper-revanced-patches/compare/v1.1.1...v1.2.0) (2026-11-08)
 
 
