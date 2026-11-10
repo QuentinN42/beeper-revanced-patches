@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/QuentinN42/beeper-revanced-patches/compare/v1.3.0...v1.4.0) (2026-11-10)
+
+
+### Features
+
+* dedupe notifications with a stable per-conversation id ([3605821](https://github.com/QuentinN42/beeper-revanced-patches/commit/36058216db17c5de8c953bde5255acd26082a9e0))
+
 # [1.3.0](https://github.com/QuentinN42/beeper-revanced-patches/compare/v1.2.1...v1.3.0) (2026-11-10)
 
 
