@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/QuentinN42/beeper-revanced-patches/compare/v1.2.1...v1.3.0) (2026-11-10)
+
+
+### Features
+
+* support ReVanced Manager 2.7.0-dev release line ([2c12f23](https://github.com/QuentinN42/beeper-revanced-patches/commit/2c12f234ebe86af765032163b32428fb1bcf6f0d))
+
 ## [1.2.1](https://github.com/QuentinN42/beeper-revanced-patches/compare/v1.2.0...v1.2.1) (2026-11-10)
 
 
