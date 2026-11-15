@@ -127,3 +127,7 @@ node_modules/
 
 # Ignore IDEA files
 .idea/
+
+# apk
+*.apk
+*.apkm
