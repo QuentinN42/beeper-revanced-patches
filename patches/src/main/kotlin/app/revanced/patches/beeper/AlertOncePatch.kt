@@ -85,6 +85,9 @@ private fun parameterRegister(
 /**
  * Build the smali of a static helper invocation passing [registers].
  *
+ * [helperDescriptor] is the helper's member name and prototype without the
+ * arrow, for example "translateCanceled(I)I"; the arrow is added here.
+ *
  * The 5-register call format (35c) cannot encode registers above 15, which the
  * range format covers; range calls need consecutive registers, which holds
  * because helper parameters mirror the parameter order of the hooked call.
@@ -137,14 +140,14 @@ private fun notifyInjection(
         listOf(INT_TYPE, NOTIFICATION_TYPE) -> {
             idParameterIndex = 0
             notificationParameterIndex = 1
-            helperDescriptor = "(I$NOTIFICATION_TYPE)I"
+            helperDescriptor = "modifyNotification(I$NOTIFICATION_TYPE)I"
             parameterIndices = intArrayOf(0, 1)
         }
 
         listOf(TAG_TYPE, INT_TYPE, NOTIFICATION_TYPE) -> {
             idParameterIndex = 1
             notificationParameterIndex = 2
-            helperDescriptor = "($TAG_TYPE" + "I$NOTIFICATION_TYPE)I"
+            helperDescriptor = "modifyNotification($TAG_TYPE" + "I$NOTIFICATION_TYPE)I"
             parameterIndices = intArrayOf(0, 1, 2)
         }
 
@@ -172,7 +175,7 @@ private fun notifyInjection(
     ) ?: return null
     val invoke = buildInvoke(
         listOf(notificationRegister),
-        "->setAlertOnce($NOTIFICATION_TYPE)V",
+        "setAlertOnce($NOTIFICATION_TYPE)V",
     ) ?: return null
 
     return Injection(index, SiteKind.NOTIFY, invoke, null)
@@ -210,7 +213,7 @@ private fun cancelInjection(
         return null
     }
 
-    val invoke = buildInvoke(listOf(idRegister), "->translateCanceled(I)I") ?: return null
+    val invoke = buildInvoke(listOf(idRegister), "translateCanceled(I)I") ?: return null
 
     return Injection(index, SiteKind.CANCEL, invoke, idRegister)
 }
