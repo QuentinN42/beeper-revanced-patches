@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/QuentinN42/beeper-revanced-patches/compare/v1.4.0...v1.4.1) (2026-11-15)
+
+
+### Bug Fixes
+
+* include the helper method name in injected invoke references ([49809fb](https://github.com/QuentinN42/beeper-revanced-patches/commit/49809fbb36273b78c2d04be9eb75f1fae8a94f31))
+
 # [1.4.0](https://github.com/QuentinN42/beeper-revanced-patches/compare/v1.3.0...v1.4.0) (2026-11-10)
 
 
